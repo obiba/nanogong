@@ -43,6 +43,12 @@ public abstract class ScriptHandler {
      * Ima ADPCM WAV audio format type
      */
     protected final static String TYPE_WAV_ADPCM = "wav/adpcm";
+
+    /**
+     * PCM WAV audio format type (uncompressed)
+     */
+    protected final static String TYPE_WAV_PCM = "wav/pcm";
+    
     /**
      * Speex audio format type
      */

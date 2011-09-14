@@ -22,6 +22,7 @@ import gong.audio.OlaBuffer;
 import gong.audio.data.FlvPCMData;
 import gong.audio.data.ImaADPCMData;
 import gong.audio.data.SpeexData;
+import gong.audio.data.WavePCMAudioData;
 import gong.event.AudioDataListener;
 import gong.event.AudioHandlerListener;
 import gong.ui.plaf.NanoAmplitudeUI;
@@ -33,12 +34,13 @@ import gong.xml.gasi.Fault;
 import gong.xml.gasi.Message;
 import gong.xml.gasi.Request;
 import gong.xml.gasi.Response;
+
 import java.awt.FontMetrics;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.InputStreamReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.math.BigInteger;
 import java.net.MalformedURLException;
@@ -46,10 +48,11 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Date;
-import java.util.ResourceBundle;
 import java.text.DecimalFormat;
 import java.text.MessageFormat;
+import java.util.Date;
+import java.util.ResourceBundle;
+
 import javax.sound.sampled.AudioFormat;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
@@ -76,6 +79,7 @@ public class NanoGong extends javax.swing.JApplet implements AudioDataListener, 
     // Available audio formats: Ima ADPCM or Speex
     static final String IMA_ADPCM = "ImaADPCM";
     static final String SPEEX = "Speex";
+    static final String PCM = "PCM";
     
     private AudioHandler handler = new AudioHandler();
     private URLLoader currentLoader = null;
@@ -191,9 +195,11 @@ public class NanoGong extends javax.swing.JApplet implements AudioDataListener, 
                     AudioData target;
                     if (audioFormat.equals(IMA_ADPCM))
                         target = new ImaADPCMData(source.getFormat());
+                    else if(audioFormat.equals(PCM))
+                        target = new WavePCMAudioData(source.getFormat());
                     else
                         target = new SpeexData(source.getFormat(), true, speexQuality);
-    
+                    
                     source.reset();
                     if (startTime > 0) source.setTime(startTime);
                     while (source.isAvailable()) {
@@ -277,6 +283,7 @@ public class NanoGong extends javax.swing.JApplet implements AudioDataListener, 
         if (value != null && value.equalsIgnoreCase("true")) showTime = true;
         value = getParameter("AudioFormat");
         if (value != null && value.equals(IMA_ADPCM)) audioFormat = IMA_ADPCM;
+        if (value != null && value.equals(PCM)) audioFormat = PCM;
         value = getParameter("SamplingRate");
         if (value != null) {
             try {
@@ -719,6 +726,8 @@ public class NanoGong extends javax.swing.JApplet implements AudioDataListener, 
             handler.setDataFormat(format);
             if (audioFormat.equals(IMA_ADPCM))
                 handler.setRecordData(new ImaADPCMData(format));
+            else if(audioFormat.equals(PCM))
+                handler.setRecordData(new WavePCMAudioData(format));
             else
                 handler.setRecordData(new SpeexData(format, true, speexQuality));
             handler.record(duration);
@@ -982,6 +991,8 @@ public class NanoGong extends javax.swing.JApplet implements AudioDataListener, 
             
             if (type.equals(TYPE_WAV_ADPCM))
                 target = new ImaADPCMData(data.getFormat());
+            else if (type.equals(TYPE_WAV_PCM))
+                target = new WavePCMAudioData(data.getFormat());
             else if (type.equals(TYPE_SPEEX)) {
                 if (speexQuality == 0) speexQuality = 10;
                 target = new SpeexData(data.getFormat(), true, speexQuality);
@@ -1025,6 +1036,19 @@ public class NanoGong extends javax.swing.JApplet implements AudioDataListener, 
                             }
                         };
                         
+                        FileFilter wavePCMFilter = new FileFilter() {
+                            public boolean accept(File f) {
+                                if (f.isDirectory()) return true;
+                                String name = f.getName().toLowerCase();
+                                if (name.endsWith(WavePCMAudioData.FILE_EXTENSION)) return true;
+                                return false;
+                            }
+                            
+                            public String getDescription() {
+                                return "Uncompressed WAV format (" + WavePCMAudioData.FILE_EXTENSION + " PCM)";
+                            }
+                        };
+                        
                         FileFilter speexFilter = new FileFilter() {
                             public boolean accept(File f) {
                                 if (f.isDirectory()) return true;
@@ -1060,6 +1084,9 @@ public class NanoGong extends javax.swing.JApplet implements AudioDataListener, 
                         if (type != null && type.equals(TYPE_WAV_ADPCM)) {
                             chooser.addChoosableFileFilter(imaADPCMFilter);
                             chooser.setFileFilter(imaADPCMFilter);
+                        } else if (type != null && type.equals(TYPE_WAV_PCM)) {
+                            chooser.addChoosableFileFilter(wavePCMFilter);
+                            chooser.setFileFilter(wavePCMFilter);
                         } else if (type != null && type.equals(TYPE_SPEEX)) {
                             chooser.addChoosableFileFilter(speexFilter);
                             chooser.setFileFilter(speexFilter);
@@ -1068,6 +1095,7 @@ public class NanoGong extends javax.swing.JApplet implements AudioDataListener, 
                             chooser.setFileFilter(flvPCMFilter);
                         } else {
                             chooser.addChoosableFileFilter(imaADPCMFilter);
+                            chooser.addChoosableFileFilter(wavePCMFilter);
                             chooser.addChoosableFileFilter(speexFilter);
                             chooser.addChoosableFileFilter(flvPCMFilter);
                             chooser.setFileFilter(imaADPCMFilter);
@@ -1083,6 +1111,9 @@ public class NanoGong extends javax.swing.JApplet implements AudioDataListener, 
                             } else if (chooser.getFileFilter().equals(flvPCMFilter)) {
                                 extension = FlvPCMData.FILE_EXTENSION;
                                 selectedType = TYPE_FLV_PCM;
+                            } else if (chooser.getFileFilter().equals(wavePCMFilter)) {
+                                extension = WavePCMAudioData.FILE_EXTENSION;
+                                selectedType = TYPE_WAV_PCM;
                             }
                             String filename = chooser.getSelectedFile().getName();
                             if (!filename.endsWith(extension)) filename += extension;
@@ -1115,7 +1146,7 @@ public class NanoGong extends javax.swing.JApplet implements AudioDataListener, 
                 return;
             }
             
-            if (type == null || (!type.equals(TYPE_WAV_ADPCM) && !type.equals(TYPE_SPEEX) && !type.equals(TYPE_FLV_PCM)))
+            if (type == null || (!type.equals(TYPE_WAV_ADPCM) && !type.equals(TYPE_WAV_PCM) && !type.equals(TYPE_SPEEX) && !type.equals(TYPE_FLV_PCM)))
                 throw new Exception("You must specify the requested file type.");
             
             File file = saveMessage(path, filename, type);
