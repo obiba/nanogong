@@ -59,6 +59,8 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileFilter;
 
+import netscape.javascript.JSObject;
+
 /**
  * This applet is the base class of the NanoGong applet.
  * @author Gibson Lam
@@ -358,6 +360,38 @@ public class NanoGong extends javax.swing.JApplet implements AudioDataListener, 
             handler.setURL(url);
         } catch (MalformedURLException ex) {
             handler.setURL(null);
+        }
+        
+        String jsListenerName = getParameter("AudioHandlerListener");
+        if(jsListenerName != null) {
+        	JSObject window = JSObject.getWindow(this);
+        	final JSObject jsListener = (JSObject)window.getMember(jsListenerName);
+        	if(jsListener != null) {
+	        	handler.addListener(new AudioHandlerListener() {
+					
+					@Override
+					public void timeUpdate(AudioHandler handler, long time) {
+						// Javascript doesn't support long
+						jsListener.call("timeUpdate", new Object[]{(int)time});
+					}
+					
+					@Override
+					public void statusUpdate(AudioHandler handler, int status) {
+						jsListener.call("statusUpdate", new Object[]{status});
+					}
+					
+					@Override
+					public void durationUpdate(AudioHandler handler, long duration) {
+						// Javascript doesn't support long
+						jsListener.call("durationUpdate", new Object[]{(int)duration});
+					}
+					
+					@Override
+					public void amplitudeUpdate(AudioHandler handler, float amplitude) {
+						jsListener.call("amplitudeUpdate", new Object[]{amplitude});					
+					}
+				});
+        	}
         }
         if (url != null) {
             URLLoader loader = getURLLoader(url, startTime, endTime);
