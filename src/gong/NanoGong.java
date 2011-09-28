@@ -246,7 +246,7 @@ public class NanoGong extends javax.swing.JApplet implements AudioDataListener, 
                     btnFast.setUI(new NanoSpeedButtonUI(NanoSpeedButtonUI.FAST));
                     slrTime.setUI(new NanoTimeUI(slrTime, NanoGong.this));
                     panWait.setVisible(false);
-
+/*
                     // Create the JLabel for time display
                     lblTime = new javax.swing.JLabel();
                     lblTime.setText("");
@@ -258,10 +258,10 @@ public class NanoGong extends javax.swing.JApplet implements AudioDataListener, 
                     lblTime.setOpaque(true);
                     lblTime.setPreferredSize(lblTime.getSize());
 
-                    // Add the time label to the glass pane
+                    // Add the time label to the glass pane*/
                     panGlassPane = (javax.swing.JPanel) getGlassPane();
                     panGlassPane.setLayout(null);
-                    panGlassPane.add(lblTime);
+//                    panGlassPane.add(lblTime);*/
                 }
             });
         } catch (Exception e) {}
@@ -1509,6 +1509,26 @@ public class NanoGong extends javax.swing.JApplet implements AudioDataListener, 
         gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
         gridBagConstraints.insets = new java.awt.Insets(5, 0, 0, 0);
         panPanel.add(slrTime, gridBagConstraints);
+        
+        
+
+        // Create the JLabel for time display
+        lblTime = new javax.swing.JLabel();
+        lblTime.setText("");
+        lblTime.setBackground(new java.awt.Color(1.0f, 1.0f, 1.0f, 0.8f));
+        lblTime.setBorder(javax.swing.BorderFactory.createLineBorder(java.awt.Color.WHITE));
+        lblTime.setBounds((getWidth() - 100) / 2, 20, 100, 12);
+        lblTime.setFont(new java.awt.Font("Dialog", java.awt.Font.BOLD, 10));
+        lblTime.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lblTime.setOpaque(true);
+        lblTime.setPreferredSize(lblTime.getSize());
+        
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        gridBagConstraints.insets = new java.awt.Insets(5, 0, 0, 0);
+        panPanel.add(lblTime, gridBagConstraints);
 
         getContentPane().add(panPanel);
 
