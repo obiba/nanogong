@@ -59,6 +59,7 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileFilter;
 
+import netscape.javascript.JSException;
 import netscape.javascript.JSObject;
 
 /**
@@ -361,36 +362,16 @@ public class NanoGong extends javax.swing.JApplet implements AudioDataListener, 
         } catch (MalformedURLException ex) {
             handler.setURL(null);
         }
-        
+                
         String jsListenerName = getParameter("AudioHandlerListener");
         if(jsListenerName != null) {
         	JSObject window = JSObject.getWindow(this);
-        	final JSObject jsListener = (JSObject)window.getMember(jsListenerName);
-        	if(jsListener != null) {
-	        	handler.addListener(new AudioHandlerListener() {
-					
-					@Override
-					public void timeUpdate(AudioHandler handler, long time) {
-						// Javascript doesn't support long
-						jsListener.call("timeUpdate", new Object[]{(int)time});
-					}
-					
-					@Override
-					public void statusUpdate(AudioHandler handler, int status) {
-						jsListener.call("statusUpdate", new Object[]{status});
-					}
-					
-					@Override
-					public void durationUpdate(AudioHandler handler, long duration) {
-						// Javascript doesn't support long
-						jsListener.call("durationUpdate", new Object[]{(int)duration});
-					}
-					
-					@Override
-					public void amplitudeUpdate(AudioHandler handler, float amplitude) {
-						jsListener.call("amplitudeUpdate", new Object[]{amplitude});					
-					}
-				});
+        	try {
+	        	JSObject jsListener = (JSObject)window.getMember(jsListenerName);
+		        handler.addListener(new JsAudioHandlerListener(jsListener));
+        	} catch(JSException e) {
+        		// specified object not found
+        		
         	}
         }
         if (url != null) {
@@ -688,7 +669,62 @@ public class NanoGong extends javax.swing.JApplet implements AudioDataListener, 
         else
             return "0";
     }
+    
+    private class JsAudioHandlerListener implements AudioHandlerListener{
+    	
+    	private final JSObject jsListener;
+		
+		boolean hasTimeUpdate;
+		boolean hasStatusUpdate;
+		boolean hasDurationUpdate;
+		boolean hasAmplitudeUpdate;
+		
+		JsAudioHandlerListener(JSObject listener) {
+			this.jsListener = listener;
+			hasTimeUpdate = hasMember("timeUpdate");
+			hasStatusUpdate = hasMember("statusUpdate");
+			hasDurationUpdate = hasMember("durationUpdate");
+			hasAmplitudeUpdate = hasMember("amplitudeUpdate");
+		}
 
+		private boolean hasMember(String member) {
+			try {
+				return jsListener.getMember(member) != null;
+			} catch (JSException e) {
+				return false;
+			}
+		}
+		
+		@Override
+		public void timeUpdate(AudioHandler handler, long time) {
+			if(hasTimeUpdate) {
+				// Javascript doesn't support long
+				jsListener.call("timeUpdate", new Object[]{(int)time});
+			}
+		}
+		
+		@Override
+		public void statusUpdate(AudioHandler handler, int status) {
+			if(hasStatusUpdate) {
+				jsListener.call("statusUpdate", new Object[]{status});
+			}
+		}
+		
+		@Override
+		public void durationUpdate(AudioHandler handler, long duration) {
+			if(hasDurationUpdate) {
+				// Javascript doesn't support long
+				jsListener.call("durationUpdate", new Object[]{(int)duration});
+			}
+		}
+		
+		@Override
+		public void amplitudeUpdate(AudioHandler handler, float amplitude) {
+			if(hasAmplitudeUpdate) {
+				jsListener.call("amplitudeUpdate", new Object[]{amplitude});
+			}
+		}
+	}
     /** The class for applying the script */
     private class ScriptHandler extends gong.xml.gasi.ScriptHandler {
         
