@@ -52,6 +52,8 @@ import java.text.DecimalFormat;
 import java.text.MessageFormat;
 import java.util.Date;
 import java.util.ResourceBundle;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import javax.sound.sampled.AudioFormat;
 import javax.swing.JFileChooser;
@@ -98,6 +100,8 @@ public class NanoGong extends javax.swing.JApplet implements AudioDataListener, 
     private boolean showTime = false;
     private long startTime = -1;
     private long endTime = -1;
+    
+    private Lock handlerLock = new ReentrantLock();
 
     /**
      * Gets a new URL loader
@@ -126,7 +130,9 @@ public class NanoGong extends javax.swing.JApplet implements AudioDataListener, 
      * @return the script handler or null if another script handler or URL loader is in use
      */
     protected synchronized ScriptHandler getScriptHandler(String request, String[] params) {
-        if (currentLoader != null || currentScriptHandler != null) return null;
+    	handlerLock.lock();
+        if (currentLoader != null || currentScriptHandler != null) {
+        }
         if (params == null)
             currentScriptHandler = new ScriptHandler(request);
         else
@@ -139,6 +145,7 @@ public class NanoGong extends javax.swing.JApplet implements AudioDataListener, 
      */
     protected synchronized void clearScriptHandler() {
         currentScriptHandler = null;
+        handlerLock.unlock();
     }
 
     private String resolveURL(String url) throws MalformedURLException {
