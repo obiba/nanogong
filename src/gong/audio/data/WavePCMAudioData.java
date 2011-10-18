@@ -13,6 +13,7 @@ import javax.sound.sampled.AudioFileFormat;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.UnsupportedAudioFileException;
 
 public class WavePCMAudioData extends BlockAudioData {
 	
@@ -21,7 +22,7 @@ public class WavePCMAudioData extends BlockAudioData {
     public static final String FILE_EXTENSION = ".wav";
 
 	public WavePCMAudioData(AudioFormat format) {
-		super(format);
+		super(new AudioFormat(format.getSampleRate(), 16, 1, true, true));
 		super.samplesPerBlock = BLOCK_SIZE_IN_SAMPLES;
 	}
 
@@ -54,7 +55,6 @@ public class WavePCMAudioData extends BlockAudioData {
 			WavePCMBlock block = (WavePCMBlock) e.nextElement();
 			block.sendToStream(baos);
 		}
-		
 		AudioInputStream ais = new AudioInputStream(new ByteArrayInputStream(baos.toByteArray()), getFormat(), getLength());
 		AudioSystem.write(ais, AudioFileFormat.Type.WAVE, stream);
 	}
@@ -62,13 +62,23 @@ public class WavePCMAudioData extends BlockAudioData {
 	@Override
 	public void receiveFromStream(InputStream stream, boolean synchronous)
 			throws IOException, AudioDataException {
-		while(stream.available() > 0) {
-			WavePCMBlock block = new WavePCMBlock();
-			block.readFromStream(stream);
-			super.blockData.add(block);
+		try {
+			AudioInputStream ais = AudioSystem.getAudioInputStream(stream);
+			if(ais.getFormat().matches(getFormat()) == false) {
+				// transcode
+				ais = AudioSystem.getAudioInputStream(getFormat(), ais);
+			}
+			while(ais.available() > 0) {
+				WavePCMBlock block = new WavePCMBlock();
+				block.readFromStream(ais);
+				super.blockData.add(block);
+			}
+			super.availableBlocks = super.blockData.size();
+			super.position = getLength();
+		} catch (UnsupportedAudioFileException e) {
+			throw new AudioDataException(e.getMessage());
 		}
-		super.availableBlocks = super.blockData.size();
-		super.position = getLength();
+
 	}
 	
 	private class WavePCMBlock extends Block {
