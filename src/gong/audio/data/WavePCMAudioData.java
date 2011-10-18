@@ -62,7 +62,13 @@ public class WavePCMAudioData extends BlockAudioData {
 	@Override
 	public void receiveFromStream(InputStream stream, boolean synchronous)
 			throws IOException, AudioDataException {
-		// not implemented
+		while(stream.available() > 0) {
+			WavePCMBlock block = new WavePCMBlock();
+			block.readFromStream(stream);
+			super.blockData.add(block);
+		}
+		super.availableBlocks = super.blockData.size();
+		super.position = getLength();
 	}
 	
 	private class WavePCMBlock extends Block {
@@ -92,10 +98,18 @@ public class WavePCMAudioData extends BlockAudioData {
             data[dataIndex+1] = (byte) (sample & 0xFF);
             position++;
         }
-    
+
         public synchronized void sendToStream(OutputStream stream) throws IOException, AudioDataException {
             if (data == null) throw new AudioDataException("Invalid send request.");
             stream.write(data);
+        }
+
+        public synchronized void readFromStream(InputStream stream) throws IOException, AudioDataException {
+            if (data == null) {
+                data = new byte[size * 2];
+            }
+            int read = stream.read(data);
+            position += read / 2;
         }
         
     }

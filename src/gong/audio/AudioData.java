@@ -16,18 +16,24 @@
  
 package gong.audio;
 
+import gong.audio.data.ImaADPCMData;
+import gong.audio.data.SpeexData;
+import gong.audio.data.WavePCMAudioData;
 import gong.event.AudioDataListener;
+
 import java.io.EOFException;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ConnectException;
 import java.util.Date;
+
+import javax.sound.sampled.AudioFileFormat;
+import javax.sound.sampled.AudioFileFormat.Type;
 import javax.sound.sampled.AudioFormat;
-import gong.audio.data.ImaADPCMData;
-import gong.audio.data.SpeexData;
-import java.io.File;
-import java.io.FileInputStream;
+import javax.sound.sampled.AudioSystem;
 
 /**
  * This abstract audio data class defines the interface of a data container of
@@ -485,6 +491,17 @@ public abstract class AudioData implements Cloneable {
                 return adpcm;
             } catch (Exception e) {}
             stream.reset();
+        } catch (Exception e) {}
+
+        try {
+            // test Wave PCM
+            stream.mark(0);
+        	AudioFileFormat format = AudioSystem.getAudioFileFormat(stream);
+            stream.reset();
+
+            if(format.getType() == Type.WAVE) {
+                return new WavePCMAudioData(format.getFormat());
+        	}
         } catch (Exception e) {}
         
         try {
