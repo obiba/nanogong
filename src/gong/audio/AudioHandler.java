@@ -391,7 +391,7 @@ public class AudioHandler {
                 
                 stream = new BufferedInputStream(connection.getInputStream());
             } catch (Exception e) {
-                throw new AudioHandlerException("Failed to establish connection to the server.");
+                throw new AudioHandlerException("Failed to establish connection to the server.", e);
             }
 
             try {
@@ -403,9 +403,9 @@ public class AudioHandler {
                 setURL(null);
                 setData(audioData);
             } catch (ConnectException e) {
-                throw new AudioHandlerException("Failed to transfer voice data.");
+                throw new AudioHandlerException("Failed to transfer voice data.", e);
             } catch (Exception e) {
-                throw new AudioHandlerException("Failed to open incompatible/unavailable voice data.");
+                throw new AudioHandlerException("Failed to open incompatible/unavailable voice data.", e);
             }
         }
     }
@@ -503,18 +503,16 @@ public class AudioHandler {
             this.timeToStop = timeToStop;
         }
         
-        public void open() throws AudioHandlerException {
+        public void open() throws Exception {
             // Prepare the audio system
             Info info = new Info(TargetDataLine.class, sourceFormat);
-            if (!AudioSystem.isLineSupported(info)) throw new AudioHandlerException("Failed to initialize audio recorder.");
-            
-            try {
-                line = (TargetDataLine) AudioSystem.getLine(info);
-                line.open(sourceFormat, line.getBufferSize());
-            } catch (LineUnavailableException e) {
-                throw new AudioHandlerException("Audio recorder is unavailable.");
+            if (!AudioSystem.isLineSupported(info)) {
+              throw new AudioHandlerException("Failed to initialize audio recorder (line not supported).");
             }
             
+            line = (TargetDataLine) AudioSystem.getLine(info);
+            line.open(sourceFormat, line.getBufferSize());
+
             // Empty the audio buffer
             setData(null);
         }
@@ -687,7 +685,7 @@ public class AudioHandler {
                 recorder.start();
             } catch (Exception e) {
                 recorder = null;
-                throw new AudioHandlerException("Failed to initialize audio recorder.");
+                throw new AudioHandlerException("Failed to initialize audio recorder.", e);
             }
         }
         else if (recorder.isPaused()) {
@@ -747,7 +745,7 @@ public class AudioHandler {
                 line = (SourceDataLine) AudioSystem.getLine(info);
                 line.open(targetFormat, (int) (targetFormat.getFrameRate() * targetFormat.getFrameSize() / 4f));
             } catch (LineUnavailableException e) {
-                throw new AudioHandlerException("Audio player is unavailable.");
+                throw new AudioHandlerException("Audio player is unavailable.", e);
             }
 
             delay = (int) ((float) line.getBufferSize() / (targetFormat.getFrameRate() * targetFormat.getFrameSize()) * 1000f) + 15;
@@ -962,7 +960,7 @@ public class AudioHandler {
                 player.start();
             } catch (Exception e) {
                 player = null;
-                throw new AudioHandlerException("Failed to initialize audio player.");
+                throw new AudioHandlerException("Failed to initialize audio player.", e);
             }
         }
         

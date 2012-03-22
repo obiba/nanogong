@@ -18,6 +18,7 @@ package gong;
 
 import gong.audio.AudioData;
 import gong.audio.AudioHandler;
+import gong.audio.AudioHandlerException;
 import gong.audio.OlaBuffer;
 import gong.audio.data.FlvPCMData;
 import gong.audio.data.ImaADPCMData;
@@ -389,6 +390,16 @@ public class NanoGong extends javax.swing.JApplet implements AudioDataListener, 
                 loader.start();
         }
     }
+
+    @Override
+    public void destroy() {
+      try {
+        handler.close();
+      } catch(AudioHandlerException e) {
+        System.err.println("Error while closing audio recorder");
+        e.printStackTrace();
+      }
+    }
     
     /**
      * Receives the updated time from the audio handler
@@ -702,7 +713,6 @@ public class NanoGong extends javax.swing.JApplet implements AudioDataListener, 
 			}
 		}
 		
-		@Override
 		public void timeUpdate(AudioHandler handler, long time) {
 			if(hasTimeUpdate) {
 				// Javascript doesn't support long
@@ -710,14 +720,12 @@ public class NanoGong extends javax.swing.JApplet implements AudioDataListener, 
 			}
 		}
 		
-		@Override
 		public void statusUpdate(AudioHandler handler, int status) {
 			if(hasStatusUpdate) {
 				jsListener.call("statusUpdate", new Object[]{status});
 			}
 		}
 		
-		@Override
 		public void durationUpdate(AudioHandler handler, long duration) {
 			if(hasDurationUpdate) {
 				// Javascript doesn't support long
@@ -725,7 +733,6 @@ public class NanoGong extends javax.swing.JApplet implements AudioDataListener, 
 			}
 		}
 		
-		@Override
 		public void amplitudeUpdate(AudioHandler handler, float amplitude) {
 			if(hasAmplitudeUpdate) {
 				jsListener.call("amplitudeUpdate", new Object[]{amplitude});
@@ -748,7 +755,7 @@ public class NanoGong extends javax.swing.JApplet implements AudioDataListener, 
             if (handler.getStatus() != AudioHandler.PAUSED && handler.getStatus() != AudioHandler.STOPPED)
                 throw new Exception("You are not allowed to play a message at the moment.");
             
-            // Get the paramters
+            // Get the parameters
             long startTime, endTime;
             String param = getParameter("StartTime", 1);
             try {
