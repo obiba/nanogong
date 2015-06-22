@@ -30,5 +30,8 @@ public class AudioHandlerException extends Exception {
     public AudioHandlerException(String message) {
         super(message);
     }
-    
+
+    public AudioHandlerException(String message, Exception cause) {
+        super(message, cause);
+    }
 }

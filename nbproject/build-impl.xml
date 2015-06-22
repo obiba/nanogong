@@ -29,8 +29,8 @@ is divided into following sections:
     <target name="-init-user" depends="-pre-init">
         <!-- The two properties below are usually overridden -->
         <!-- by the active platform. Just a fallback. -->
-        <property value="1.5" name="default.javac.source"/>
-        <property value="1.5" name="default.javac.target"/>
+        <property value="1.7" name="default.javac.source"/>
+        <property value="1.7" name="default.javac.target"/>
     </target>
     <target name="-init-project" depends="-pre-init,-init-user">
         <property file="nbproject/project.properties"/>
