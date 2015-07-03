@@ -13,6 +13,15 @@
     <target name="-post-jar">
         <available property="keystore.available" file="keystore.jks"/>
         <fail unless="keystore.available">Please provide a keystore and save it as 'keystore.jks' in this directory. Otherwise, you have to sign your NanoGong applet manually.</fail>
+        <jar destfile="${dist.jar}" update="true">
+            <manifest>
+                <attribute name="Built-By" value="OBiBa"/>
+                <attribute name="Permissions" value="all-permissions"/>
+                <attribute name="Trusted-Library" value="true"/>
+                <attribute name="Codebase" value="*"/>
+                <attribute name="Application-Library-Allowable-Codebase" value="*"/>
+            </manifest>
+        </jar>
         <!-- sign the jar file -->
         <signjar jar="${dist.jar}" keystore="keystore.jks" alias="nanogong" storepass="nanogong"/>
     </target>
