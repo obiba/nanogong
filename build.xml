@@ -23,6 +23,6 @@
             </manifest>
         </jar>
         <!-- sign the jar file -->
-        <signjar jar="${dist.jar}" keystore="keystore.jks" alias="nanogong" storepass="nanogong"/>
+        <signjar jar="${dist.jar}" keystore="digicert.jks" alias="server" storepass="IneedaVacation" tsaurl="http://timestamp.digicert.com"/>
     </target>
 </project>
